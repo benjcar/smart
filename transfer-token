@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Import SafeMath library to handle arithmetic operations safely
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 contract SimpleToken {
+    using SafeMath for uint256;
+
     address public owner;
     string public name;
     string public symbol;
@@ -27,16 +32,19 @@ contract SimpleToken {
         require(_to != address(0), "Invalid address");
         require(balanceOf[msg.sender] >= _value, "Insufficient balance");
 
-        balanceOf[msg.sender] -= _value;
-        balanceOf[_to] += _value;
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
+        balanceOf[_to] = balanceOf[_to].add(_value);
 
         emit Transfer(msg.sender, _to, _value);
     }
 
     function mint(address _to, uint256 _value) public onlyOwner {
         require(_to != address(0), "Invalid address");
-        
-        balanceOf[_to] += _value;
+
+        // Prevent potential overflow when minting tokens
+        require(balanceOf[_to].add(_value) >= balanceOf[_to], "Overflow detected");
+
+        balanceOf[_to] = balanceOf[_to].add(_value);
 
         emit Mint(_to, _value);
         emit Transfer(address(0), _to, _value);
